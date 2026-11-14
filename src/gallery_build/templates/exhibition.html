@@ -12,7 +12,7 @@
       {% if photo.caption or photo.get("author") %}<figcaption>{% if photo.get("author") %}<span class="photo-author">{{ photo.author }}</span>{% endif %}{% if photo.caption %}<span>{{ photo.caption }}</span>{% endif %}</figcaption>{% endif %}
       {% if photo.exif %}<dl class="exif">
       {% for field, icon, label in [('camera','camera','Камера'),('focal_length','focal','Фокусное расстояние'),('f_number','aperture','Диафрагма'),('exposure_time','shutter','Выдержка'),('iso','iso','ISO')] %}
-        {% if photo.exif.get(field) %}<div><dt title="{{ label }}"><span class="sr-only">{{ label }}</span>{% if icon == 'aperture' %}<span aria-hidden="true">ƒ</span>{% else %}<img src="{{ prefix }}assets/{{ icon }}.svg" alt="">{% endif %}</dt><dd>{{ photo.exif[field] }}</dd></div>{% endif %}
+        {% if photo.exif.get(field) %}<div><dt title="{{ label }}"><span class="sr-only">{{ label }}</span><img src="{{ prefix }}assets/{{ icon }}.svg" alt=""></dt><dd>{{ photo.exif[field] }}</dd></div>{% endif %}
       {% endfor %}</dl>{% endif %}
     </figure>
   {% endfor %}
