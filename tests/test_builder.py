@@ -33,6 +33,15 @@ def example(key="example"):
 
 
 class BuilderTests(unittest.TestCase):
+    def test_binary_backdrop_is_preserved_in_build_and_renderer_revision(self):
+        from gallery_build.builder import ROOT, renderer_sources
+
+        name = "assets/film-background.webp"
+        data = (ROOT / name).read_bytes()
+        self.assertEqual(build([])[name], data)
+        self.assertEqual(renderer_sources()[name], data)
+        self.assertEqual(data[:4], b"RIFF")
+
     def test_collective_photo_authors_are_optional_public_and_escaped(self):
         item = example()
         item["kind"] = "collective"
