@@ -42,7 +42,9 @@ class GitHub:
         self.transport = transport
 
     def api(self, method, path, data=None, missing=False):
-        if not path.startswith("/") or ".." in path:
+        if not path.startswith("/") or any(
+            part in {".", ".."} for part in path.split("?", 1)[0].split("/")
+        ):
             raise PublicationError("Invalid GitHub API path")
         if self.transport:
             return self.transport(method, path, data, missing)
