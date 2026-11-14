@@ -3,7 +3,7 @@ import { packageZip } from './form-zip.js';
 const $ = id => document.getElementById(id);
 const fields = [['camera', 'camera', 'Камера'], ['focal_length', 'focal', 'Фокусное расстояние'], ['f_number', 'aperture', 'Диафрагма'], ['exposure_time', 'shutter', 'Выдержка'], ['iso', 'iso', 'ISO']];
 const fonts = { inter: "'Inter',sans-serif", georgia: 'Georgia,serif', playfair: "'Playfair Display',serif", montserrat: "'Montserrat',sans-serif", merriweather: "'Merriweather',serif", roboto_mono: "'Roboto Mono',monospace" };
-const presets = [['Тёплый минимализм', '#faf7f2', '#c1622d', 'inter'], ['Тёмный контраст', '#121212', '#f2c744', 'montserrat'], ['Мягкая пастель', '#f5eef8', '#8e7cc3', 'merriweather'], ['Чёрно-белая классика', '#ffffff', '#1a1a1a', 'georgia'], ['Природные тона', '#efeae0', '#3f6c51', 'playfair'], ['Ночной неон', '#0b0f19', '#00d1b2', 'roboto_mono']];
+const presets = [['Тёплый минимализм', '#faf7f2', '#c1622d', 'inter'], ['Тёмный контраст', '#121212', '#f2c744', 'montserrat'], ['Мягкая пастель', '#f5eef8', '#8e7cc3', 'georgia'], ['Чёрно-белая классика', '#ffffff', '#1a1a1a', 'georgia'], ['Природные тона', '#efeae0', '#3f6c51', 'playfair'], ['Ночной неон', '#0b0f19', '#00d1b2', 'roboto_mono']];
 const photos = [];
 let topic = null, busy = false, dirty = false, invalidTopic = false;
 const message = (text, error = false) => { $('status').textContent = text; $('status').dataset.error = String(error); };
@@ -126,6 +126,7 @@ function loadTopic(value) {
     invalidTopic = false;
     if (!/^COL-[A-F0-9]{16}$/.test(value.id) || typeof value.title !== 'string' || !value.title.trim() || value.title.length > 300 || typeof value.description !== 'string' || value.description.length > 10000 || !fonts[value.font] || !/^#[a-f0-9]{6}$/i.test(value.background) || !/^#[a-f0-9]{6}$/i.test(value.accent) || !Number.isInteger(value.used) || value.used < 0 || value.used > 5 || !Number.isFinite(Date.parse(value.deadline)) || !Number.isInteger(value.used_bytes ?? 0) || (value.used_bytes ?? 0) < 0 || (value.used_bytes ?? 0) > 100000000) throw Error();
     message(''); topic = value; $('title').value = value.title; $('description').value = value.description; $('title').readOnly = $('description').readOnly = true; $('title').maxLength = 300; $('description').maxLength = 10000;
+    if (value.font === 'merriweather' && !$('font').querySelector('option[value=merriweather]')) $('font').add(new Option('Merriweather', 'merriweather'));
     $('background').value = value.background; $('accent').value = value.accent; $('font').value = value.font;
     $('font').disabled = true; for (const node of $('colors').querySelectorAll('input,button')) node.disabled = true;
     $('author').required = false; $('author').placeholder = 'Имя (необязательно)';
