@@ -157,7 +157,7 @@ def validate_manifest(item):
         raise ValueError("Expected 1–100 photographs")
     seen = set()
     for photo in item["photos"]:
-        if not isinstance(photo, dict) or set(photo) != {
+        if not isinstance(photo, dict) or set(photo) - {"author"} != {
             "id",
             "url",
             "preview",
@@ -168,6 +168,8 @@ def validate_manifest(item):
             "exif",
         }:
             raise ValueError("Invalid photograph fields")
+        if "author" in photo:
+            _text(photo["author"], "photo author", 120)
         identifier(photo["id"])
         if photo["id"] in seen:
             raise ValueError("Duplicate photograph id")

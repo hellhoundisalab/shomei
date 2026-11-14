@@ -33,6 +33,20 @@ def example(key="example"):
 
 
 class BuilderTests(unittest.TestCase):
+    def test_collective_photo_authors_are_optional_public_and_escaped(self):
+        item = example()
+        item["kind"] = "collective"
+        item["author"] = ""
+        item["photos"][0]["author"] = "<b>Автор фото</b>"
+        page = build([item])["exhibitions/example/index.html"].decode()
+        self.assertIn("&lt;b&gt;Автор фото&lt;/b&gt;", page)
+        self.assertNotIn('<span aria-hidden="true">·</span>', page)
+        item["photos"][0].pop("author")
+        build([item])
+        item["photos"][0]["telegram_id"] = 123
+        with self.assertRaises(ValueError):
+            validate_manifest(item)
+
     def test_selected_font_and_stable_card_scatter(self):
         from gallery_build.builder import scatter
 

@@ -8,7 +8,7 @@
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   let busy = false;
   let pending = null;
-  let mode = 'author';
+  let mode = new URLSearchParams(location.search).get('mode') === 'collective' ? 'collective' : 'author';
   let switching = false;
   let queuedMode = null;
   let railPosition = 0;

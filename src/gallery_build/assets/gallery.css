@@ -50,3 +50,6 @@ body.leaving-home .tablet{translate:0 0}
 #viewer-image{display:block;max-width:calc(100% - 32px);max-height:100%;width:auto;height:auto;object-fit:contain;user-select:none;-webkit-user-drag:none;transform-origin:center;box-shadow:0 12px 40px #0006}
 .viewer-stage.zoomed{cursor:grab}.viewer-stage.panning{cursor:grabbing}body.viewer-open{overflow:hidden}
 @media(prefers-reduced-motion:reduce){.tablet:hover .stack img,.tablet:focus-visible .stack img{scale:1}}
+
+.photograph figcaption span { display: block; }
+.photograph .photo-author { margin-bottom: .35em; font-weight: 600; }
