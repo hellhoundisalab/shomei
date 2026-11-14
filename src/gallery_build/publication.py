@@ -15,11 +15,11 @@ from .builder import (
     build,
     canonical,
     digest,
-    identifier,
     renderer_revision,
     renderer_sources,
     validate_manifest,
 )
+from .catalog import catalog_from_items, catalog_ids, check_catalog_item, upsert_catalog
 
 WORKFLOW = "prepare-exhibition.yml"
 MAX_PAYLOAD = 48000
@@ -138,23 +138,12 @@ def public_manifest(item):
     return item
 
 
-def catalog_ids(value):
-    if (
-        not isinstance(value, list)
-        or len(value) > 50
-        or any(not isinstance(x, str) for x in value)
-        or len(set(value)) != len(value)
-    ):
-        raise PublicationError("Некорректный каталог галереи")
-    for key in value:
-        identifier(key)
-    return value
-
-
 def merge_catalog(items, item):
     public_manifest(item)
     existing = [x["id"] for x in items]
     if item["id"] in existing:
+        if items[existing.index(item["id"])]["kind"] != item["kind"]:
+            return [item, *[x for x in items if x["id"] != item["id"]]]
         return [item if x["id"] == item["id"] else x for x in items]
     return [item, *items]
 
@@ -202,7 +191,8 @@ def repository_snapshot(github):
         )
     if f".github/workflows/{WORKFLOW}" not in nodes:
         raise PublicationError("В main галереи отсутствует workflow подготовки PR")
-    ids = catalog_ids(json.loads(github.file("content/catalog.json", sha)))
+    catalog = json.loads(github.file("content/catalog.json", sha))
+    ids = catalog_ids(catalog)
     items, css = [], {}
     for key in ids:
         path = f"content/exhibitions/{key}/manifest.json"
@@ -211,6 +201,7 @@ def repository_snapshot(github):
         item = public_manifest(json.loads(github.file(path, sha)))
         if item["id"] != key:
             raise PublicationError("ID manifest не совпадает с каталогом")
+        check_catalog_item(catalog, item)
         items.append(item)
         path = f"content/exhibitions/{key}/custom.css"
         if path in nodes:
@@ -286,7 +277,7 @@ def prepare_changes(root, payload):
         raise PublicationError("Build differs from approved preview")
     key = payload["manifest"]["id"]
     return {
-        "content/catalog.json": canonical([x["id"] for x in items]) + "\n",
+        "content/catalog.json": canonical(catalog_from_items(items)) + "\n",
         f"content/exhibitions/{key}/manifest.json": canonical(payload["manifest"])
         + "\n",
     }, files
@@ -308,11 +299,23 @@ def create_pr(github, payload, changes):
         or changes[manifest_path] != canonical(payload["manifest"]) + "\n"
     ):
         raise PublicationError("Unexpected publication files")
-    catalog = catalog_ids(
-        json.loads(github.file("content/catalog.json", payload["base_sha"]))
-    )
-    if key not in catalog:
-        catalog.insert(0, key)
+    catalog = json.loads(github.file("content/catalog.json", payload["base_sha"]))
+    ids = catalog_ids(catalog)
+    if isinstance(catalog, list):
+        previous = []
+        for sid in ids:
+            old = public_manifest(
+                json.loads(
+                    github.file(
+                        f"content/exhibitions/{sid}/manifest.json", payload["base_sha"]
+                    )
+                )
+            )
+            if old["id"] != sid:
+                raise PublicationError("ID manifest не совпадает с каталогом")
+            previous.append(old)
+        catalog = catalog_from_items(previous)
+    catalog = upsert_catalog(catalog, payload["manifest"])
     if changes["content/catalog.json"] != canonical(catalog) + "\n":
         raise PublicationError("Unexpected catalog changes")
     for pr in github.pulls(state="open"):

@@ -3,6 +3,42 @@
   'use strict';
   let drag = null;
   let suppressClickUntil = 0;
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  const hoverPointer = matchMedia('(any-hover: hover) and (any-pointer: fine)');
+  let activePhoto = null, photoFrame = 0, photoPoint = null;
+  function resetPhoto() {
+    cancelAnimationFrame(photoFrame); photoFrame = 0;
+    if (activePhoto) ['--hover-x','--hover-y','--hover-angle'].forEach(key => activePhoto.style.removeProperty(key));
+    activePhoto = null;
+  }
+  document.addEventListener('pointermove', event => {
+    const photo = event.target.closest('.stack img');
+    if (!photo || event.pointerType !== 'mouse' || event.buttons || drag || reducedMotion.matches || !hoverPointer.matches || photo.closest('.rail').inert) {
+      resetPhoto(); return;
+    }
+    if (activePhoto !== photo) {resetPhoto(); activePhoto = photo;}
+    photoPoint = {x:event.clientX,y:event.clientY};
+    if (photoFrame) return;
+    photoFrame = requestAnimationFrame(() => {
+      photoFrame = 0;
+      // Measure the stationary stack, not the moving image: no hover feedback loop.
+      const rect = photo.offsetParent.getBoundingClientRect();
+      const clamp = value => Math.max(-1,Math.min(1,value));
+      const x = clamp((photoPoint.x-rect.left-photo.offsetLeft)/photo.offsetWidth*2-1);
+      const y = clamp((photoPoint.y-rect.top-photo.offsetTop)/photo.offsetHeight*2-1);
+      photo.style.setProperty('--hover-x',`${x*4}px`);
+      photo.style.setProperty('--hover-y',`${y*3}px`);
+      photo.style.setProperty('--hover-angle',`${x*1.2}deg`);
+    });
+  }, {passive:true});
+  document.addEventListener('pointerout', event => {if (event.target === activePhoto) resetPhoto();});
+  document.addEventListener('pointerdown', resetPhoto, {passive:true});
+  document.addEventListener('scroll', resetPhoto, {capture:true,passive:true});
+  document.addEventListener('visibilitychange', () => {if (document.hidden) resetPhoto();});
+  window.addEventListener('blur', resetPhoto);
+  window.addEventListener('gallery:navigate', resetPhoto);
+  reducedMotion.addEventListener('change', resetPhoto);
+  hoverPointer.addEventListener('change', resetPhoto);
   document.addEventListener('wheel', event => {
     const rail = event.target.closest('.rail');
     if (!rail || rail.inert || event.ctrlKey || rail.scrollWidth <= rail.clientWidth) return;

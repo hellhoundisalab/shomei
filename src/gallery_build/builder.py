@@ -10,6 +10,8 @@ from urllib.parse import urlsplit
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined, select_autoescape
 
+from .catalog import catalog_from_items, catalog_ids, check_catalog_item, upsert_catalog
+
 ROOT = Path(__file__).parent
 RUNTIME_SOURCES = {
     p.relative_to(ROOT).as_posix(): p.read_bytes() for p in ROOT.glob("*.py")
@@ -214,6 +216,7 @@ def build(items, custom_css=None, media=None):
         raise ValueError("Local preview currently supports at most 50 exhibitions")
     for item in items:
         validate_manifest(item)
+    items = sorted(items, key=lambda item: item["kind"] != "author")
     if len({x["id"] for x in items}) != len(items):
         raise ValueError("Duplicate exhibition id")
     custom_css = custom_css or {}
@@ -311,10 +314,8 @@ def build(items, custom_css=None, media=None):
 def load_project(root):
     root = Path(root)
     catalog = json.loads((root / "content/catalog.json").read_text(encoding="utf-8"))
-    if not isinstance(catalog, list) or len(set(catalog)) != len(catalog):
-        raise ValueError("catalog.json must be an ordered list of unique ids")
     items, css = [], {}
-    for key in catalog:
+    for key in catalog_ids(catalog):
         identifier(key)
         folder = root / "content/exhibitions" / key
         items.append(
@@ -324,6 +325,7 @@ def load_project(root):
         )
         if items[-1]["id"] != key:
             raise ValueError("Catalog id differs from manifest")
+        check_catalog_item(catalog, items[-1])
         if (folder / "custom.css").exists():
             css[key] = (folder / "custom.css").read_text(encoding="utf-8")
     return items, css
@@ -337,14 +339,11 @@ def import_manifest(root, item):
     catalog = (
         json.loads(catalog_path.read_text(encoding="utf-8"))
         if catalog_path.exists()
-        else []
+        else catalog_from_items([])
     )
-    if not isinstance(catalog, list) or len(set(catalog)) != len(catalog):
-        raise ValueError("Invalid catalog")
-    for key in catalog:
-        identifier(key)
-    if item["id"] not in catalog:
-        catalog.insert(0, item["id"])
+    if isinstance(catalog, list):
+        catalog = catalog_from_items(load_project(root)[0])
+    catalog = upsert_catalog(catalog, item)
     folder = root / "content/exhibitions" / item["id"]
     folder.mkdir(parents=True, exist_ok=True)
     (folder / "manifest.json").write_text(canonical(item) + "\n", encoding="utf-8")

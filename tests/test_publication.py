@@ -7,6 +7,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from gallery_build.builder import build, canonical, digest, import_manifest
+from gallery_build.catalog import catalog_from_items
 from gallery_build.publication import (
     PublicationError,
     branch_name,
@@ -84,7 +85,7 @@ class PublicationTests(unittest.TestCase):
         item = example()
         payload = make_payload(BASE, item, build([item]))
         changes = {
-            "content/catalog.json": canonical([item["id"]]) + "\n",
+            "content/catalog.json": canonical(catalog_from_items([item])) + "\n",
             "content/exhibitions/example/manifest.json": canonical(item) + "\n",
         }
         return payload, changes
@@ -167,7 +168,8 @@ class PublicationTests(unittest.TestCase):
             )
             changes, _ = prepare_changes(root, payload)
             self.assertEqual(
-                json.loads(changes["content/catalog.json"]), ["example", "older"]
+                json.loads(changes["content/catalog.json"]),
+                catalog_from_items([item, old]),
             )
             self.assertEqual(custom.read_text(), "h1 {opacity:.9}")
             # Changed CSS, base content or renderer cannot silently differ from approval.
