@@ -17,4 +17,4 @@ gallery = "gallery_build.__main__:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-gallery_build = ["templates/*.html", "assets/*", "assets/fonts/*"]
+gallery_build = ["templates/*.html", "assets/*", "assets/fonts/*", "form-assets/*"]
