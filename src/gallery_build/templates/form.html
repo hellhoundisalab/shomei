@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' blob: data:; connect-src 'none'; worker-src 'self'; base-uri 'none'; form-action 'none'">
+  <title>Новая выставка — Shomei</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="../assets/gallery.css"><link rel="stylesheet" href="../assets/form-fonts.css"><link rel="stylesheet" href="../assets/form.css">
+  <script type="module" src="../assets/form.js"></script>
+</head>
+<body class="form-page">
+  <nav class="editor-toolbar" aria-label="Оформление выставки">
+    <a class="editor-brand" href="../">Shomei</a>
+    <details id="colors"><summary>Цвет</summary><div class="editor-popover">
+      <div class="presets" aria-label="Готовые варианты"></div>
+      <label>Фон <span class="color-control"><input type="color" id="background-picker" value="#faf7f2" aria-label="Палитра фона"><input id="background" value="#faf7f2" maxlength="7" pattern="#[0-9a-fA-F]{6}" aria-label="HEX фона"></span></label>
+      <label>Текст <span class="color-control"><input type="color" id="accent-picker" value="#c1622d" aria-label="Палитра текста"><input id="accent" value="#c1622d" maxlength="7" pattern="#[0-9a-fA-F]{6}" aria-label="HEX текста"></span></label>
+    </div></details>
+    <label class="font-control"><span class="sr-only">Шрифт</span><select id="font" aria-label="Шрифт"><option value="inter">Inter</option><option value="georgia">Georgia</option><option value="playfair">Playfair Display</option><option value="montserrat">Montserrat</option><option value="merriweather">Merriweather</option><option value="roboto_mono">Roboto Mono</option></select></label>
+    <details><summary>Комментарий</summary><div class="editor-popover comment-popover"><label for="comment">Для администраторов</label><textarea id="comment" maxlength="1000" rows="5" placeholder="Пожелания к выставке. На сайте этот текст не появится."></textarea></div></details>
+    <span id="budget" class="budget">0 / 20 · 0 МБ</span>
+    <button id="export" class="export-button" type="button">Скачать заявку <span aria-hidden="true">↗</span></button>
+  </nav>
+  <main>
+    <p class="editor-help" id="mode-hint">Соберите свою выставку. Фотографии остаются на вашем устройстве до отправки архива в Telegram.</p>
+    <p id="status" role="status" aria-live="polite"></p>
+    <article class="exhibition editor-exhibition">
+      <header class="exhibition-header">
+        <div class="title-row"><h1><textarea id="title" rows="1" maxlength="150" aria-label="Название выставки" placeholder="Название выставки" required></textarea></h1></div>
+        <textarea class="description" id="description" rows="2" maxlength="1500" aria-label="Описание выставки" placeholder="О чём эта история? Добавьте описание"></textarea>
+        <p class="byline"><em><input id="author" maxlength="120" placeholder="Ваше имя" aria-label="Имя автора" required></em><span aria-hidden="true">·</span><strong><time id="date"></time></strong></p>
+      </header>
+      <div class="photographs" id="photographs"></div>
+      <label class="photo-drop" id="drop" tabindex="0" role="button">
+        <span class="drop-plus" aria-hidden="true">+</span>
+        <strong>Добавить фотографии</strong>
+        <span>Перетащите, вставьте из буфера или выберите на компьютере</span>
+        <small id="limits">JPEG, PNG, WebP · до 30 МБ на фото · до 100 МБ на заявку</small>
+        <input id="files" type="file" multiple accept="image/jpeg,image/png,image/webp,.json" class="sr-only">
+      </label>
+    </article>
+  </main>
+  <dialog id="export-done"><h2>Заявка готова</h2><p>Отправьте скачанный ZIP боту как файл. Он проверит фотографии и предложит подтвердить отправку.</p><p>Скачивание ещё не отправляет заявку.</p><button type="button" id="close-export">Понятно</button></dialog>
+  <noscript>Для редактирования и экспорта включите JavaScript. Фотографии обрабатываются на вашем устройстве.</noscript>
+</body>
+</html>

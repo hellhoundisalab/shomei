@@ -34,6 +34,9 @@ def main():
         for path in (args.project / "media").rglob("*.jpg")
     }
     files = build(items, css, media)
+    from .form import form_files
+
+    files.update(form_files())
     if args.command == "validate":
         print(f"Valid project: {len(items)} exhibitions")
         return
