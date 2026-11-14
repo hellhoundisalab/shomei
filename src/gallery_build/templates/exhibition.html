@@ -1,0 +1,20 @@
+<article class="exhibition {% if item.theme.background|dark %}dark{% endif %}" style="--accent:{{ item.theme.accent }};--ink:{{ item.theme.accent }};--body-font:{{ item.theme|font_stack }};--title-font:{{ item.theme|title_stack }}" data-exhibition="{{ item.id }}">
+  <header class="exhibition-header">
+    <div class="title-row"><h1>{{ item.title }}</h1><a class="back" href="{{ prefix }}index.html" data-view-link="home" aria-label="Назад к галерее"><picture><source media="(max-width: 600px)" srcset="{{ prefix }}assets/back-mobile.svg"><img src="{{ prefix }}assets/back.svg" alt=""></picture></a></div>
+    {% if item.description %}<p class="description">{{ item.description }}</p>{% endif %}
+    <p class="byline"><em>{{ item.author }}</em><span aria-hidden="true">·</span><strong><time datetime="{{ item.date }}">{{ item.date|display_date }}</time></strong></p>
+  </header>
+  <div class="photographs">
+  {% for photo in item.photos %}
+    <figure class="photograph {% if photo.height > photo.width %}portrait{% endif %} {% if photo.exif %}has-exif{% endif %}">
+      <a class="photo-open" href="{{ (prefix if photo.url.startswith('media/') else '') ~ photo.url }}" aria-label="Открыть фотографию: {{ photo.alt }}">
+      <img class="photo" src="{{ (prefix if photo.url.startswith("media/") else "") ~ photo.url }}" alt="{{ photo.alt }}" width="{{ photo.width }}" height="{{ photo.height }}" {% if not loop.first %}loading="lazy"{% endif %} decoding="async"></a>
+      {% if photo.caption %}<figcaption>{{ photo.caption }}</figcaption>{% endif %}
+      {% if photo.exif %}<dl class="exif">
+      {% for field, icon, label in [('camera','camera','Камера'),('focal_length','focal','Фокусное расстояние'),('f_number','aperture','Диафрагма'),('exposure_time','shutter','Выдержка'),('iso','iso','ISO')] %}
+        {% if photo.exif.get(field) %}<div><dt title="{{ label }}"><span class="sr-only">{{ label }}</span>{% if icon == 'aperture' %}<span aria-hidden="true">ƒ</span>{% else %}<img src="{{ prefix }}assets/{{ icon }}.svg" alt="">{% endif %}</dt><dd>{{ photo.exif[field] }}</dd></div>{% endif %}
+      {% endfor %}</dl>{% endif %}
+    </figure>
+  {% endfor %}
+  </div>
+</article>

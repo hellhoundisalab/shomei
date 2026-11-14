@@ -1,0 +1,20 @@
+[project]
+name = "pgallery-site-builder"
+version = "0.1.0"
+description = "Shared static gallery builder and local preview renderer"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = ["jinja2>=3.1.6,<4"]
+
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project.scripts]
+gallery = "gallery_build.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+gallery_build = ["templates/*.html", "assets/*", "assets/fonts/*"]
