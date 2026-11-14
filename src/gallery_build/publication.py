@@ -55,7 +55,9 @@ class GitHub:
         if raw:
             headers["Content-Type"] = "application/json"
         request = Request(
-            "https://api.github.com/repos/" + self.repository + path,
+            "https://api.github.com/repos/"
+            + self.repository
+            + ("" if path == "/" else path),
             data=raw,
             headers=headers,
             method=method,
