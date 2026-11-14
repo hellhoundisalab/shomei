@@ -86,6 +86,17 @@ class FakeGitHub:
 
 
 class PublicationTests(unittest.TestCase):
+    def test_compare_endpoint_allowed_but_traversal_rejected(self):
+        from gallery_build.publication import GitHub
+
+        github = GitHub("owner/gallery", transport=lambda *args: {"behind_by": 0})
+        self.assertEqual(
+            github.api("GET", "/compare/" + "a" * 40 + "..." + "b" * 40),
+            {"behind_by": 0},
+        )
+        with self.assertRaises(PublicationError):
+            github.api("GET", "/contents/../secret")
+
     def fixture(self):
         item = example()
         payload = make_payload(BASE, item, build([item]))
