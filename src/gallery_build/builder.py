@@ -316,6 +316,9 @@ def build(items, custom_css=None, media=None):
 def load_project(root):
     root = Path(root)
     catalog = json.loads((root / "content/catalog.json").read_text(encoding="utf-8"))
+    from .lifecycle import check_withdrawals, local_markers
+
+    check_withdrawals(catalog, local_markers(root))
     items, css = [], {}
     for key in catalog_ids(catalog):
         identifier(key)

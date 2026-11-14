@@ -17,6 +17,8 @@ from gallery_build.publication import (
     prepare_changes,
     public_manifest,
     renderer_tree,
+    receipt,
+    receipt_path,
     repository_snapshot,
     validate_payload,
 )
@@ -35,12 +37,13 @@ class FakeGitHub:
         self.calls = []
         self.commits = {BASE: {"tree": {"sha": "old-tree"}}}
         self.catalog = []
+        self.manifests = {}
 
     def main(self):
         return self.base
 
     def file(self, path, ref):
-        return canonical(self.catalog)
+        return canonical(self.manifests.get(path, self.catalog))
 
     def pulls(self, branch=None, state="all"):
         return [
@@ -52,6 +55,8 @@ class FakeGitHub:
 
     def api(self, method, path, data=None, missing=False):
         self.calls.append((method, path, data))
+        if path.startswith("/git/trees/"):
+            return {"tree": []}
         if path.startswith("/git/commits/"):
             return self.commits[path.split("/")[-1]]
         if path == "/git/trees":
@@ -86,6 +91,7 @@ class PublicationTests(unittest.TestCase):
         payload = make_payload(BASE, item, build([item]))
         changes = {
             "content/catalog.json": canonical(catalog_from_items([item])) + "\n",
+            receipt_path(item["id"]): canonical(receipt(payload)) + "\n",
             "content/exhibitions/example/manifest.json": canonical(item) + "\n",
         }
         return payload, changes

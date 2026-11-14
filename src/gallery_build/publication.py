@@ -20,6 +20,7 @@ from .builder import (
     validate_manifest,
 )
 from .catalog import catalog_from_items, catalog_ids, check_catalog_item, upsert_catalog
+from .lifecycle import assert_not_withdrawn, marker, marker_path, local_markers
 
 WORKFLOW = "prepare-exhibition.yml"
 MAX_PAYLOAD = 48000
@@ -211,11 +212,13 @@ def repository_snapshot(github):
     return sha, items, css
 
 
-def make_payload(base, manifest, files):
+def make_payload(base, manifest, files, operation="upsert", previous=None):
     payload = {
-        "schema_version": 1,
+        "schema_version": 2,
+        "operation": operation,
+        "previous_manifest": digest(previous) if previous is not None else None,
         "base_sha": base,
-        "manifest": public_manifest(manifest),
+        "manifest": public_manifest(manifest) if operation == "upsert" else manifest,
         "renderer_revision": renderer_revision(),
         "site_sha256": site_digest(files),
     }
@@ -233,10 +236,13 @@ def validate_payload(payload):
         "site_sha256",
         "job_id",
     }
+    if isinstance(payload, dict) and payload.get("schema_version") == 2:
+        fields.update({"operation", "previous_manifest"})
     if (
         not isinstance(payload, dict)
         or set(payload) != fields
-        or payload["schema_version"] != 1
+        or payload["schema_version"] not in (1, 2)
+        or payload.get("operation", "upsert") not in ("upsert", "withdraw")
     ):
         raise PublicationError("Invalid publication payload")
     if len(canonical(payload).encode()) > MAX_PAYLOAD:
@@ -245,12 +251,24 @@ def validate_payload(payload):
         payload["base_sha"]
     ):
         raise PublicationError("Invalid base SHA")
+    previous = payload.get("previous_manifest")
+    if previous is not None and (
+        not isinstance(previous, str) or not re.fullmatch(r"[a-f0-9]{64}", previous)
+    ):
+        raise PublicationError("Invalid previous manifest digest")
     for key in ("renderer_revision", "site_sha256", "job_id"):
         if not isinstance(payload[key], str) or not re.fullmatch(
             r"[0-9a-f]{64}", payload[key]
         ):
             raise PublicationError("Invalid publication digest")
-    public_manifest(payload["manifest"])
+    if payload.get("operation") == "withdraw":
+        if not isinstance(payload["manifest"], dict) or set(payload["manifest"]) != {
+            "id"
+        }:
+            raise PublicationError("Invalid withdrawal target")
+        marker_path(payload["manifest"]["id"])
+    else:
+        public_manifest(payload["manifest"])
     if digest({k: v for k, v in payload.items() if k != "job_id"}) != payload["job_id"]:
         raise PublicationError("Publication payload changed")
     return payload
@@ -259,6 +277,33 @@ def validate_payload(payload):
 def branch_name(payload):
     validate_payload(payload)
     return f"publish/{payload['manifest']['id']}/{payload['job_id'][:24]}"
+
+
+def receipt_path(key):
+    marker_path(key)
+    return f"content/publications/{key}.json"
+
+
+def receipt(payload):
+    return {
+        "schema_version": 1,
+        "operation": payload.get("operation", "upsert"),
+        "previous": payload.get("previous_manifest"),
+        "current": None
+        if payload.get("operation") == "withdraw"
+        else digest(payload["manifest"]),
+    }
+
+
+def check_previous(payload, previous):
+    if payload.get("schema_version") != 2:
+        raise PublicationError("Old publication format; prepare a new preview")
+    if payload["previous_manifest"] != (
+        digest(previous) if previous is not None else None
+    ):
+        raise PublicationError(
+            "Previous exhibition revision changed; prepare a new preview"
+        )
 
 
 def prepare_changes(root, payload):
@@ -271,20 +316,35 @@ def prepare_changes(root, payload):
     items, css = load_project(root)
     for item in items:
         public_manifest(item)
-    items = merge_catalog(items, payload["manifest"])
+    key = payload["manifest"]["id"]
+    check_previous(payload, next((item for item in items if item["id"] == key), None))
+    if payload.get("operation") == "withdraw":
+        items = [x for x in items if x["id"] != key]
+        css.pop(key, None)
+    else:
+        if key in local_markers(root):
+            raise PublicationError("Withdrawn exhibition cannot be published")
+        items = merge_catalog(items, payload["manifest"])
     files = build(items, css)
     if site_digest(files) != payload["site_sha256"]:
         raise PublicationError("Build differs from approved preview")
     key = payload["manifest"]["id"]
+    if payload.get("operation") == "withdraw":
+        return {
+            "content/catalog.json": canonical(catalog_from_items(items)) + "\n",
+            marker_path(key): canonical(marker(key)) + "\n",
+            receipt_path(key): canonical(receipt(payload)) + "\n",
+        }, files
     return {
         "content/catalog.json": canonical(catalog_from_items(items)) + "\n",
+        receipt_path(key): canonical(receipt(payload)) + "\n",
         f"content/exhibitions/{key}/manifest.json": canonical(payload["manifest"])
         + "\n",
     }, files
 
 
 def create_pr(github, payload, changes):
-    """Only two generated data paths; no ref updates, force push or merge API."""
+    """Only three generated data paths; no ref updates, force push or merge API."""
     validate_payload(payload)
     branch = branch_name(payload)
     existing = github.pulls(branch)
@@ -293,14 +353,27 @@ def create_pr(github, payload, changes):
             0
         ]  # Closed/merged and manually edited PRs are never overwritten.
     key = payload["manifest"]["id"]
-    manifest_path = f"content/exhibitions/{key}/manifest.json"
+    withdrawing = payload.get("operation") == "withdraw"
+    manifest_path = (
+        marker_path(key) if withdrawing else f"content/exhibitions/{key}/manifest.json"
+    )
+    expected_data = marker(key) if withdrawing else payload["manifest"]
     if (
-        set(changes) != {"content/catalog.json", manifest_path}
-        or changes[manifest_path] != canonical(payload["manifest"]) + "\n"
+        set(changes) != {"content/catalog.json", manifest_path, receipt_path(key)}
+        or changes[receipt_path(key)] != canonical(receipt(payload)) + "\n"
+        or changes[manifest_path] != canonical(expected_data) + "\n"
     ):
         raise PublicationError("Unexpected publication files")
     catalog = json.loads(github.file("content/catalog.json", payload["base_sha"]))
     ids = catalog_ids(catalog)
+    previous_item = (
+        json.loads(
+            github.file(f"content/exhibitions/{key}/manifest.json", payload["base_sha"])
+        )
+        if key in ids
+        else None
+    )
+    check_previous(payload, previous_item)
     if isinstance(catalog, list):
         previous = []
         for sid in ids:
@@ -315,11 +388,21 @@ def create_pr(github, payload, changes):
                 raise PublicationError("ID manifest не совпадает с каталогом")
             previous.append(old)
         catalog = catalog_from_items(previous)
-    catalog = upsert_catalog(catalog, payload["manifest"])
+    if withdrawing:
+        catalog = {
+            **catalog,
+            **{
+                kind: [sid for sid in catalog[kind] if sid != key]
+                for kind in ("author", "collective")
+            },
+        }
+    else:
+        assert_not_withdrawn(github, payload["base_sha"], key)
+        catalog = upsert_catalog(catalog, payload["manifest"])
     if changes["content/catalog.json"] != canonical(catalog) + "\n":
         raise PublicationError("Unexpected catalog changes")
     for pr in github.pulls(state="open"):
-        if pr["head"]["ref"].startswith(f"publish/{key}/"):
+        if not withdrawing and pr["head"]["ref"].startswith(f"publish/{key}/"):
             raise PublicationError(
                 "Для выставки уже открыт другой PR; завершите его вручную"
             )
@@ -353,7 +436,7 @@ def create_pr(github, payload, changes):
             "POST",
             "/git/commits",
             {
-                "message": f"Add gallery exhibition {key}",
+                "message": f"{'Withdraw' if withdrawing else 'Update'} gallery exhibition {key}",
                 "tree": tree["sha"],
                 "parents": [payload["base_sha"]],
             },
@@ -368,10 +451,16 @@ def create_pr(github, payload, changes):
         "POST",
         "/pulls",
         {
-            "title": f"Выставка: {payload['manifest']['title']}"[:200],
+            "title": f"{'Снять выставку' if withdrawing else 'Выставка'}: {payload['manifest'].get('title', key)}"[
+                :200
+            ],
             "head": branch,
             "base": "main",
-            "body": "Добавляет или обновляет выставку и ссылку на неё в каталоге. Ручные файлы сохраняются.\n\n"
+            "body": (
+                "Снимает выставку с сайта и навсегда запрещает повторную публикацию этого ID. Файлы S3 пока сохраняются.\n\n"
+                if withdrawing
+                else "Добавляет или обновляет выставку и ссылку на неё в каталоге. Ручные файлы сохраняются.\n\n"
+            )
             + f"Проверена сборка согласованного предпросмотра `{payload['site_sha256']}`.\n"
             + f"База: `{payload['base_sha']}`. Задание: `{payload['job_id']}`.\n\n"
             + "Проверьте изменения и объедините PR вручную. Публикация Pages запускается только после merge в main. "

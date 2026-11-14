@@ -62,6 +62,9 @@ class CatalogTests(unittest.TestCase):
                 import_manifest(root, item)
             github = FakeGitHub()
             github.catalog = catalog_from_items([author, old])
+            github.manifests = {
+                f"content/exhibitions/{x['id']}/manifest.json": x for x in (author, old)
+            }
             payload = make_payload(BASE, new, build(merge_catalog([author, old], new)))
             changes, _ = prepare_changes(root, payload)
             self.assertEqual(
@@ -76,7 +79,9 @@ class CatalogTests(unittest.TestCase):
             # Changing kind moves only the selected entry, to the front of its new section.
             new = {**old, "kind": "author"}
             github.ref = None
-            payload = make_payload(BASE, new, build(merge_catalog([author, old], new)))
+            payload = make_payload(
+                BASE, new, build(merge_catalog([author, old], new)), previous=old
+            )
             changes, _ = prepare_changes(root, payload)
             self.assertEqual(
                 json.loads(changes["content/catalog.json"]),
