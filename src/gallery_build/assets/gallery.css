@@ -69,10 +69,10 @@ body.entering[data-view=home] .film-background{animation:film-appear 450ms both}
    changing the font's proportions, retaining 05's sizes as the upper bound. */
 .modes button{font-size:min(219px,13vw);line-height:252px;letter-spacing:-.01em;font-weight:400}
 .modes button[aria-pressed=true]{font-size:min(228px,13.54vw);letter-spacing:-.01em}
-.rail{top:calc(60svh - 64px);height:calc(40svh + 64px);gap:0;padding-top:64px;padding-bottom:0;scroll-padding-inline:72px;scrollbar-width:none}
+.rail{top:calc(60svh - 32px);height:calc(40svh + 32px);gap:0;padding-top:64px;padding-bottom:0;scroll-padding-inline:72px;scrollbar-width:none}
 .tablet{position:relative;flex-basis:352px;min-height:max(500px,calc(40svh + 80px));border-radius:20px;box-shadow:var(--tablet-shadow);translate:0 0;transition:translate 380ms cubic-bezier(.16,1,.3,1),box-shadow 380ms}
 .tablet.is-active,.tablet:focus-visible{translate:0 calc(-1 * var(--tablet-lift));z-index:1}
-@media(hover:hover){.tablet:hover{translate:0 calc(-1 * var(--tablet-lift));box-shadow:var(--tablet-shadow)}}
+@media(hover:hover){.tablet:hover{translate:0 calc(-1 * var(--tablet-lift) - 12px);box-shadow:var(--tablet-shadow)}}
 .metadata h2,.metadata p{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
 .stack{height:340px}.stack img:nth-child(2){top:50px}.stack img:nth-child(3){top:145px}
 @media(max-width:1000px) and (min-width:601px){.modes button{font-size:150px;line-height:180px;letter-spacing:-1.5px}.modes button[aria-pressed=true]{font-size:156px;letter-spacing:-1.56px}.rail{scroll-padding-inline:40px}}
@@ -81,8 +81,9 @@ body.entering[data-view=home] .film-background{animation:film-appear 450ms both}
   .modes{top:max(16px,calc(40svh - 202px));gap:28px;right:0}
   .modes button{font-size:min(115.5px,29.62vw);line-height:138px;letter-spacing:-.01em}
   .modes button[aria-pressed=true]{font-size:min(120px,30.77vw);letter-spacing:-.01em}
-  .rail{top:calc(40svh - 64px);height:calc(60svh + 64px);scroll-padding-inline:24px}
+  .rail{top:calc(40svh - 32px);height:calc(60svh + 32px);scroll-padding-inline:24px}
   .tablet{flex-basis:min(312px,calc(100vw - 72px));min-height:max(640px,calc(60svh + 80px))}
   .stack{height:357px}.stack img:nth-child(2){top:72px}.stack img:nth-child(3){top:187px}
 }
 @media(max-height:600px){.modes{top:4svh}.modes button{font-size:clamp(68px,18svh,120px);line-height:1.15}.modes button[aria-pressed=true]{font-size:clamp(71px,18.7svh,125px)}}
+@media(prefers-reduced-motion:reduce){.tablet.is-active:hover{translate:0 calc(-1 * var(--tablet-lift))}}
