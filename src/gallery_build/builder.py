@@ -190,7 +190,11 @@ def validate_manifest(item):
 
 def source_bytes(path):
     data = RUNTIME_SOURCES[path.name] if path.suffix == ".py" else path.read_bytes()
-    return data if path.suffix in {".ttf", ".woff2"} else data.replace(b"\r\n", b"\n")
+    return (
+        data
+        if path.suffix in {".ttf", ".woff2", ".webp"}
+        else data.replace(b"\r\n", b"\n")
+    )
 
 
 def renderer_sources():
@@ -200,7 +204,7 @@ def renderer_sources():
         if path.is_file()
         and "__pycache__" not in path.parts
         and path.suffix
-        in {".py", ".html", ".css", ".js", ".svg", ".ttf", ".woff2", ".txt"}
+        in {".py", ".html", ".css", ".js", ".svg", ".ttf", ".woff2", ".webp", ".txt"}
     }
 
 

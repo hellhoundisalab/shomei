@@ -184,7 +184,7 @@ def repository_snapshot(github):
         if path.startswith("src/gallery_build/")
         and node["type"] == "blob"
         and path.rsplit(".", 1)[-1]
-        in {"py", "html", "css", "js", "svg", "ttf", "woff2", "txt"}
+        in {"py", "html", "css", "js", "svg", "ttf", "woff2", "webp", "txt"}
     }
     if actual != expected or any(
         nodes[p]["mode"] not in {"100644", "100755"} for p in expected

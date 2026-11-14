@@ -12,12 +12,48 @@
   let switching = false;
   let queuedMode = null;
   let railPosition = 0;
+  let activeFrame = 0;
+  function revealSelectedTab() {
+    const selected = document.querySelector('[data-mode][aria-pressed=true]');
+    if (!selected) return;
+    const nav = selected.parentElement;
+    const right = selected.offsetLeft + selected.offsetWidth;
+    if (right > nav.scrollLeft + nav.clientWidth) nav.scrollLeft = right - nav.clientWidth;
+    if (selected.offsetLeft < nav.scrollLeft) nav.scrollLeft = selected.offsetLeft;
+  }
+  document.fonts.ready.then(revealSelectedTab);
+  window.addEventListener('resize', revealSelectedTab);
+  function activate(card) {
+    if (!card || card.hidden || busy || switching) return;
+    card.closest('.rail').querySelectorAll('.tablet').forEach(el => el.classList.toggle('is-active', el === card));
+  }
+  function activateNearest(rail) {
+    cancelAnimationFrame(activeFrame);
+    activeFrame = requestAnimationFrame(() => {
+      const edge = rail.getBoundingClientRect().left + parseFloat(getComputedStyle(rail).paddingLeft);
+      const cards = [...rail.querySelectorAll('.tablet:not([hidden])')];
+      const nearest = cards.reduce((best, card) => !best || Math.abs(card.getBoundingClientRect().left-edge) < Math.abs(best.getBoundingClientRect().left-edge) ? card : best, null);
+      activate(nearest);
+    });
+  }
+  document.addEventListener('pointerover', event => {
+    if (event.pointerType === 'mouse' && !event.buttons) activate(event.target.closest('.tablet'));
+  });
+  document.addEventListener('focusin', event => activate(event.target.closest('.tablet')));
+  document.addEventListener('scroll', event => {
+    if (event.target.matches?.('.rail')) activateNearest(event.target);
+  }, {capture:true,passive:true});
   const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
   const pathKey = () => Object.keys(views).find(key => new URL(views[key].path, base).pathname === location.pathname) || 'home';
   function applyMode(next) {
     mode = next;
     document.querySelectorAll('[data-mode]').forEach(el => el.setAttribute('aria-pressed', String(el.dataset.mode === mode)));
     document.querySelectorAll('[data-kind]').forEach(el => { el.hidden = el.dataset.kind !== mode; });
+    const cards = [...document.querySelectorAll('.tablet:not([hidden])')];
+    if (!cards.some(el => el.classList.contains('is-active'))) {
+      document.querySelectorAll('.tablet').forEach(el => el.classList.toggle('is-active', el === cards[0]));
+    }
+    revealSelectedTab();
   }
   const visibleCards = () => [...document.querySelectorAll('.tablet:not([hidden])')].filter(el => {
     const r = el.getBoundingClientRect(); return r.right > 0 && r.left < innerWidth;
@@ -44,6 +80,7 @@
     const rail = document.querySelector('.rail');
     rail.inert = true;
     const tabs = [...document.querySelectorAll('[data-mode]')];
+    document.querySelector('.modes').scrollLeft = 0;
     const before = tabs.map(el => ({rect:el.getBoundingClientRect(), opacity:getComputedStyle(el).opacity}));
     tabs.forEach(el => el.setAttribute('aria-pressed', String(el.dataset.mode === next)));
     if (!reduced.matches) tabs.forEach((el,index) => {

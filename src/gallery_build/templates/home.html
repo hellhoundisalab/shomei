@@ -1,11 +1,15 @@
 <div class="home">
+  <div class="film-background" aria-hidden="true">
+    <img class="film-photograph" src="{{ prefix }}assets/film-background.webp" alt="" fetchpriority="high">
+    <div class="film-veil"></div>
+  </div>
   <nav class="modes" aria-label="Режим галереи">
     <button type="button" data-mode="collective" aria-pressed="false">ВЫСТАВКИ</button>
     <button type="button" data-mode="author" aria-pressed="true">АВТОРЫ</button>
   </nav>
   <div class="rail" aria-label="Коллекции">
   {% for item in items %}
-    <a class="tablet" href="{{ prefix }}exhibitions/{{ item.id }}/index.html" data-view-link="{{ item.id }}" data-kind="{{ item.kind }}" style="--surface:{{ item.theme.background }};--accent:{{ item.theme.accent }};--ink:{{ item.theme.accent }};--body-font:{{ item.theme|font_stack }}" {% if item.kind != 'author' %}hidden{% endif %}>
+    <a class="tablet{% if loop.first %} is-active{% endif %}" href="{{ prefix }}exhibitions/{{ item.id }}/index.html" data-view-link="{{ item.id }}" data-kind="{{ item.kind }}" style="--surface:{{ item.theme.background }};--accent:{{ item.theme.accent }};--ink:{{ item.theme.accent }};--body-font:{{ item.theme|font_stack }}" {% if item.kind != 'author' %}hidden{% endif %}>
       <div class="metadata"><h2>{{ item.title }}</h2>
         {% if item.kind == 'author' %}<p>{{ item.author }}</p>{% else %}<p><em>{{ item.description }}</em></p>{% endif %}
         <time datetime="{{ item.date }}">{{ item.date|display_date }}</time>
