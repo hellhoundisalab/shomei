@@ -54,11 +54,13 @@ def check(github, head):
         raise ValueError("main changed during validation; rerun checks")
 
 
-if __name__ == "__main__":
-    event = json.loads(Path(os.environ["GITHUB_EVENT_PATH"]).read_text())
-    github = GitHub(os.environ["GITHUB_REPOSITORY"], os.environ["GH_TOKEN"])
-    pr = github.api("GET", f"/pulls/{int(event['number'])}")
-    if pr["head"]["sha"] != event["pull_request"]["head"]["sha"]:
+def report(github, number, expected_sha):
+    """Report the trusted guard result for this exact PR revision, never PR code."""
+    path = f"/pulls/{int(number)}"
+    pr = github.api("GET", path)
+    if pr["state"] != "open" or pr["base"]["ref"] != "main":
+        raise ValueError("Expected an open PR targeting main")
+    if pr["head"]["sha"] != expected_sha:
         raise ValueError("PR changed while check was queued")
     sha = pr["head"]["sha"]
 
@@ -76,8 +78,17 @@ if __name__ == "__main__":
     status("pending", "Checking withdrawal history against current main")
     try:
         check(github, sha)
+        current = github.api("GET", path)
+        if current["head"]["sha"] != sha or current["state"] != "open":
+            raise ValueError("PR changed during validation")
     except Exception:
         status("failure", "Unsafe publication or outdated branch; inspect the workflow")
         raise
     status("success", "Withdrawal history preserved")
     print("Withdrawal history preserved; no removed exhibition can return")
+
+
+if __name__ == "__main__":
+    event = json.loads(Path(os.environ["GITHUB_EVENT_PATH"]).read_text())
+    github = GitHub(os.environ["GITHUB_REPOSITORY"], os.environ["GH_TOKEN"])
+    report(github, event["number"], event["pull_request"]["head"]["sha"])

@@ -13,6 +13,7 @@ from gallery_build.publication import (
     prepare_changes,
     validate_payload,
 )
+from publication_guard import report
 
 
 def main():
@@ -44,6 +45,9 @@ def main():
         with open(os.environ["GITHUB_STEP_SUMMARY"], "a", encoding="utf-8") as handle:
             handle.write(f"[Открыть PR]({url}) — merge выполняется вручную.\n")
         print(url)
+        # Bot-created PRs do not emit pull_request_target. Check here using
+        # the same main-only code and token; never execute the PR checkout.
+        report(github, pr["number"], pr["head"]["sha"])
     else:
         raise ValueError("Unknown job mode")
 
