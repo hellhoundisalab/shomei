@@ -48,6 +48,9 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      # GITHUB_TOKEN does not trigger pull_request_target on bot-created PRs.
+      # Run the same trusted-main guard explicitly after creating the PR.
+      statuses: write
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
