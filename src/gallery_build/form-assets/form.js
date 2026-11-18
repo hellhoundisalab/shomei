@@ -6,7 +6,7 @@ const fonts = { inter: "'Inter',sans-serif", georgia: 'Georgia,serif', playfair:
 const presets = [['Тёплый минимализм', '#faf7f2', '#c1622d', 'inter'], ['Тёмный контраст', '#121212', '#f2c744', 'montserrat'], ['Мягкая пастель', '#f5eef8', '#8e7cc3', 'georgia'], ['Чёрно-белая классика', '#ffffff', '#1a1a1a', 'georgia'], ['Природные тона', '#efeae0', '#3f6c51', 'playfair'], ['Ночной неон', '#0b0f19', '#00d1b2', 'roboto_mono']];
 const photos = [];
 let topic = null, busy = false, dirty = false, invalidTopic = false;
-const message = (text, error = false) => { $('status').textContent = text; $('status').dataset.error = String(error); };
+const message = (text, error = false) => { $('status').textContent = error ? '' : text; $('status').dataset.error = String(error); $('upload-warning').textContent = error ? text : ''; $('upload-warning').hidden = !error || !text; };
 const resize = element => { element.style.height = 'auto'; element.style.height = `${element.scrollHeight}px`; };
 function theme() {
   for (const key of ['background', 'accent']) {
@@ -27,7 +27,10 @@ function theme() {
   document.querySelectorAll('.presets button').forEach((b, i) => b.setAttribute('aria-pressed', String(presets[i][1] === $('background').value.toLowerCase() && presets[i][2] === $('accent').value.toLowerCase())));
 }
 function maximum() { return topic ? Math.max(0, 5 - topic.used) : 20; }
-function updateBudget() { $('budget').textContent = `${photos.length} / ${maximum()} · ${(photos.reduce((n, p) => n + p.file.size, 0) / 1000000).toFixed(1)} МБ`; }
+function totalBytes() { return photos.reduce((n, p) => n + p.file.size, 0) + (topic?.used_bytes || 0); }
+function updateBudget() { $('budget').textContent = `${photos.length} / ${maximum()} фото · ${(totalBytes() / 1000000).toFixed(1)} / 100 МБ`; }
+function exifEnabled() { return topic ? topic.exif_allowed !== false : $('show-exif').checked; }
+$('show-exif').addEventListener('change', () => { dirty = true; render(); });
 const eye = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/><path class="eye-slash" d="m3 3 18 18"/></svg>';
 function render() {
   $('photographs').replaceChildren();
@@ -44,8 +47,8 @@ function render() {
     for (const [key, icon, label] of fields) {
       const row = document.createElement('div'), dt = document.createElement('dt'), dd = document.createElement('dd'), toggle = document.createElement('button'), iconImage = new Image();
       iconImage.src = `../assets/${icon}.svg`; iconImage.alt = label; dt.title = label; dt.append(iconImage); dd.textContent = photo.exif[key] || '—'; dd.title = photo.exif[key] ? label : `${label}: данные не найдены в предпросмотре`;
-      toggle.disabled = topic?.exif_allowed === false; toggle.type = 'button'; toggle.className = 'exif-toggle'; toggle.innerHTML = eye; toggle.title = `Показывать: ${label}`; toggle.setAttribute('aria-label', `Показывать ${label} для фотографии ${index + 1}`);
-      const sync = () => { const on = photo.visible.has(key); toggle.setAttribute('aria-pressed', String(on)); row.dataset.visible = String(on); }; sync();
+      toggle.disabled = !exifEnabled(); toggle.type = 'button'; toggle.className = 'exif-toggle'; toggle.innerHTML = eye; toggle.title = `Показывать: ${label}`; toggle.setAttribute('aria-label', `Показывать ${label} для фотографии ${index + 1}`);
+      const sync = () => { const on = exifEnabled() && photo.visible.has(key); toggle.setAttribute('aria-pressed', String(on)); row.dataset.visible = String(on); }; sync();
       toggle.onclick = () => { if (photo.visible.has(key)) photo.visible.delete(key); else photo.visible.add(key); dirty = true; sync(); }; row.append(dt, dd, toggle); exif.append(row);
     }
     figure.append(image, caption, actions, exif); $('photographs').append(figure);
@@ -80,7 +83,7 @@ async function add(files) {
     try {
       if (photos.length >= maximum()) throw Error(`Доступно не более ${maximum()} фотографий`);
       if (!file.size || file.size > 30000000) throw Error('Фото должно быть не больше 30 МБ');
-      if (photos.reduce((n, p) => n + p.file.size, 0) + file.size > 99930000 - (topic?.used_bytes || 0)) throw Error('Превышен объём заявки: 100 МБ с учётом архива');
+      if (totalBytes() + file.size > 99930000) throw Error(`Фото не добавлено: превышен лимит заявки 100 МБ с учётом архива. Уже занято ${(totalBytes() / 1000000).toFixed(1)} МБ, это фото — ${(file.size / 1000000).toFixed(1)} МБ. Удалите часть фотографий или уменьшите их размер.`);
       message(`Подготавливаю ${photos.length + 1}…`);
       const info = await imageInfo(file), display = await preview(file);
       photos.push({ file, ...info, ...display, caption: '', visible: new Set(topic?.exif_allowed === false ? [] : fields.map(x => x[0])) }); dirty = true;
@@ -114,7 +117,7 @@ $('export').onclick = async () => {
   if (topic && Date.parse(topic.deadline) <= Date.now()) return message('Приём в эту выставку завершён. Выберите тему в боте заново.', true);
   busy = true; $('export').disabled = true; message('Собираю архив…');
   try {
-    const manifest = { schema_version: 1, kind: topic ? 'collective' : 'author', topic_id: topic?.id || null, title: $('title').value.trim(), description: $('description').value.trim(), author: $('author').value.trim(), theme: { background: $('background').value, accent: $('accent').value, font: $('font').value }, comment: $('comment').value.trim(), photos: photos.map((p, i) => ({ file: `images/${String(i + 1).padStart(2, '0')}.${p.ext}`, caption: p.caption.trim(), exif_visible: [...p.visible].sort() })) };
+    const manifest = { schema_version: 1, kind: topic ? 'collective' : 'author', topic_id: topic?.id || null, title: $('title').value.trim(), description: $('description').value.trim(), author: $('author').value.trim(), theme: { background: $('background').value, accent: $('accent').value, font: $('font').value }, comment: $('comment').value.trim(), photos: photos.map((p, i) => ({ file: `images/${String(i + 1).padStart(2, '0')}.${p.ext}`, caption: p.caption.trim(), exif_visible: exifEnabled() ? [...p.visible].sort() : [] })) };
     const blob = await packageZip(manifest, photos.map(p => p.file)), url = URL.createObjectURL(blob), link = document.createElement('a');
     link.href = url; link.download = 'shomei-application.zip'; link.click(); setTimeout(() => URL.revokeObjectURL(url), 60000);
     dirty = false; message('Архив скачан. Отправьте его боту файлом и подтвердите заявку.'); $('export-done').showModal();

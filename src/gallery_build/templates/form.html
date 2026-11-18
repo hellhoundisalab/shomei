@@ -19,8 +19,10 @@
     </div></details>
     <label class="font-control"><span>Шрифт</span><select id="font" aria-label="Шрифт"><option value="inter">Inter</option><option value="georgia">Georgia</option><option value="playfair">Playfair Display</option><option value="montserrat">Montserrat</option><option value="roboto_mono">Roboto Mono</option></select></label>
     <details><summary>Комментарий</summary><div class="editor-popover comment-popover"><label for="comment">Для администраторов</label><textarea id="comment" maxlength="1000" rows="5" placeholder="Пожелания к выставке. На сайте этот текст не появится."></textarea></div></details>
-    <span id="budget" class="budget">0 / 20 · 0 МБ</span>
+    <label class="global-exif-control" title="Показывать параметры съёмки для всех фотографий"><input id="show-exif" type="checkbox" role="switch" aria-label="Показывать EXIF для всех фотографий" checked><span class="global-exif-track" aria-hidden="true"></span><span><span class="exif-verb">Показывать </span>EXIF</span></label>
+    <span id="budget" class="budget">0 / 20 фото · 0 / 100 МБ</span>
     <button id="export" class="export-button" type="button">Скачать заявку <span aria-hidden="true">↗</span></button>
+    <p id="upload-warning" role="alert" hidden></p>
   </nav>
   <main>
     <p class="editor-help" id="mode-hint">Соберите свою выставку. Фотографии остаются на вашем устройстве до отправки архива в Telegram.</p>
