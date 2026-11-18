@@ -85,7 +85,7 @@
     tabs.forEach(el => el.setAttribute('aria-pressed', String(el.dataset.mode === next)));
     if (!reduced.matches) tabs.forEach((el,index) => {
       const old = before[index], now = el.getBoundingClientRect();
-      el.animate([{transform:`translateX(${old.rect.left-now.left}px) scale(${old.rect.width/now.width})`,opacity:old.opacity},
+      el.animate([{transform:`translate(${old.rect.left-now.left}px,${old.rect.top-now.top}px) scale(${old.rect.width/now.width})`,opacity:old.opacity},
                   {transform:'none',opacity:getComputedStyle(el).opacity}], {duration:420,easing:'cubic-bezier(.22,1,.36,1)'});
     });
     const outgoing = await moveCards('out');

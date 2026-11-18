@@ -97,8 +97,11 @@ body.entering[data-view=home] .film-background{animation:film-appear 450ms both}
 .home-links a:hover::after,.home-links a:focus-visible::after{opacity:1}
 @media(max-width:600px){
  .home-links{top:12px;right:16px;gap:6px}
- .modes{left:24px;right:24px;gap:3vw;overflow:visible;flex-wrap:nowrap}
- .modes button,.modes button[aria-pressed="true"]{font-size:min(64px,11vw);line-height:1.15;order:0;flex-shrink:0}
+ .home{--rail-visible:40svh}
+ .modes{top:clamp(64px,17svh,160px);left:24px;right:24px;gap:0;overflow:visible;flex-direction:column;align-items:flex-start}
+ .modes button{font-size:clamp(72px,22vw,115.5px);line-height:1.05;order:0;flex-shrink:0}
+ .modes button[aria-pressed="true"]{font-size:clamp(75px,22.8vw,120px);line-height:1.05;order:0}
+ .tablet{height:calc(40svh + 80px);min-height:0}
  .photograph.has-exif{display:flex;flex-direction:column;width:calc(100% - 48px)}
  .photograph.has-exif.portrait{width:calc(100% - 84px)}
  .photograph .exif{position:static;order:-1;width:100%;margin:0 0 14px;display:flex;flex-direction:row;flex-wrap:wrap;gap:8px 16px;font-size:11px}
