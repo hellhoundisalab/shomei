@@ -17,3 +17,17 @@
  .editor-exhibition .exif-toggle{margin:0}
  .editor-exhibition .photograph figcaption{order:1}
 }
+
+.editor-toolbar{flex-wrap:wrap}
+.global-exif-control{position:relative;display:flex;align-items:center;gap:8px;white-space:nowrap;cursor:pointer;font-size:13px}
+.global-exif-control input{position:absolute;width:40px;height:24px;opacity:0}
+.global-exif-track{width:40px;height:24px;flex:0 0 40px;box-sizing:border-box;padding:3px;border-radius:99px;background:#879992;transition:background .16s}
+.global-exif-track::after{content:'';display:block;width:18px;height:18px;border-radius:50%;background:white;transition:transform .16s}
+.global-exif-control input:checked + .global-exif-track{background:#304b49}
+.global-exif-control input:checked + .global-exif-track::after{transform:translateX(16px)}
+.global-exif-control input:focus-visible + .global-exif-track{outline:2px solid currentColor;outline-offset:3px}
+.form-page[data-kind="collective"] .global-exif-control{display:none}
+#upload-warning{flex-basis:100%;margin:0;padding:10px 14px;max-height:110px;overflow:auto;white-space:pre-line;border-radius:12px;background:#fff0e6;color:#9f3025;font:13px/1.5 Inter,sans-serif}
+.editor-toolbar:has(#upload-warning:not([hidden])) .budget{color:#9f3025;opacity:1}
+
+@media(max-width:360px){.editor-toolbar .font-control select{width:80px;max-width:80px}.global-exif-control .exif-verb{display:none}}
