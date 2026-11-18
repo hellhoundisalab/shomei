@@ -51,6 +51,8 @@ body.leaving-home .tablet{translate:0 0}
 
 .photograph figcaption span { display: block; }
 .photograph .photo-author { margin-bottom: .35em; font-weight: 600; }
+.photograph .photo-author--collective { margin: .35em 0 0; text-align: right; font-style: normal; font-weight: 400; }
+.photograph .photo-author--collective:first-child { margin-top: 0; }
 
 /* Ribbon 04 layout, Film 03 backdrop and Ribbon 05 type sizes / photo shadows. */
 :root{--photo-shadow:8px 9px 5px rgba(41,15,23,.88);--tablet-shadow:0 2px 6px rgba(15,28,33,.14),0 10px 30px 1px rgba(15,28,33,.2);--rail-visible:min(60svh,max(40svh,400px))}
@@ -104,7 +106,8 @@ body.entering[data-view=home] .film-background{animation:film-appear 450ms both}
  .tablet{height:calc(40svh + 80px);min-height:0}
  .photograph.has-exif{display:flex;flex-direction:column;width:calc(100% - 48px)}
  .photograph.has-exif.portrait{width:calc(100% - 84px)}
- .photograph .exif{position:static;order:-1;width:100%;margin:0 0 14px;display:flex;flex-direction:row;flex-wrap:wrap;gap:8px 16px;font-size:11px}
+ .photograph .exif{position:static;order:-1;width:100%;margin:0 0 14px;display:flex;flex-direction:row;flex-wrap:wrap;justify-content:center;gap:8px 16px;font-size:11px}
  .photograph .exif>div{margin:0}
  .photograph figcaption{order:1}
+ .photograph .photo-author--collective{text-align:center}
 }
