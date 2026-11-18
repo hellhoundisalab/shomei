@@ -14,6 +14,7 @@ function theme() {
     input.setCustomValidity(valid ? '' : 'Укажите цвет в формате #RRGGBB');
     if (!valid) return;
     $(`${key}-picker`).value = input.value;
+    $(`${key}-swatch`).style.backgroundColor = input.value;
   }
   document.body.style.backgroundColor = $('background').value;
   document.body.style.setProperty('--ink', $('accent').value);
@@ -122,6 +123,7 @@ $('export').onclick = async () => {
 };
 $('close-export').onclick = () => $('export-done').close();
 function loadTopic(value) {
+  document.body.dataset.kind = 'collective';
   try {
     invalidTopic = false;
     if (!/^COL-[A-F0-9]{16}$/.test(value.id) || typeof value.title !== 'string' || !value.title.trim() || value.title.length > 300 || typeof value.description !== 'string' || value.description.length > 10000 || !fonts[value.font] || !/^#[a-f0-9]{6}$/i.test(value.background) || !/^#[a-f0-9]{6}$/i.test(value.accent) || !Number.isInteger(value.used) || value.used < 0 || value.used > 5 || !Number.isFinite(Date.parse(value.deadline)) || !Number.isInteger(value.used_bytes ?? 0) || (value.used_bytes ?? 0) < 0 || (value.used_bytes ?? 0) > 100000000) throw Error();
@@ -136,6 +138,7 @@ function loadTopic(value) {
   $('export').disabled = invalidTopic; theme(); updateBudget();
 }
 const params = new URLSearchParams(location.hash.slice(1));
+if (params.has('topic') || params.has('collective')) document.body.dataset.kind = 'collective';
 if (params.has('topic')) {
   try {
     const raw = params.get('topic'); if (raw.length > 30000) throw Error();
