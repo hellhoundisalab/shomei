@@ -19,15 +19,6 @@
       <label>Текст <span class="color-control"><input type="color" id="accent-picker" value="#c1622d" aria-label="Палитра текста"><input id="accent" value="#c1622d" maxlength="7" pattern="#[0-9a-fA-F]{6}" aria-label="HEX текста"></span></label>
     </div></details>
     <label class="font-control"><span>Шрифт</span><select id="font" aria-label="Шрифт"><option value="inter">Inter</option><option value="georgia">Georgia</option><option value="playfair">Playfair Display</option><option value="montserrat">Montserrat</option><option value="roboto_mono">Roboto Mono</option></select></label>
-    <details id="music-editor-menu"><summary>Музыка ♫</summary><div class="editor-popover music-popover"><div data-music-editor data-resolver="{{ music_resolver }}">
-<label>Музыка · необязательно<input name="music_url" type="url" maxlength="1500" placeholder="https://…" autocomplete="off"></label>
-<label>Название<input name="music_title" maxlength="150" placeholder="Название композиции, альбома или плейлиста"></label>
-<label>Исполнитель<input name="music_artist" maxlength="150" placeholder="Исполнитель"></label>
-<input type="hidden" name="music_json" value="">
-<button type="button" data-check-music>Проверить ссылку</button>
-<p role="status" aria-live="polite"></p><div class="music-preview"></div>
-<small>Apple Music, Bandcamp, VK (плейлист), Яндекс Музыка, Deezer, Spotify, SoundCloud, YouTube, Mixcloud. Короткие ссылки сначала откройте на сервисе.</small>
-</div></div></details>
     <details><summary>Комментарий</summary><div class="editor-popover comment-popover"><label for="comment">Для администраторов</label><textarea id="comment" maxlength="1000" rows="5" placeholder="Пожелания к выставке. На сайте этот текст не появится."></textarea></div></details>
     <label class="global-exif-control" title="Показывать параметры съёмки для всех фотографий"><input id="show-exif" type="checkbox" role="switch" aria-label="Показывать EXIF для всех фотографий" checked><span class="global-exif-track" aria-hidden="true"></span><span><span class="exif-verb">Показывать </span>EXIF</span></label>
     <span id="budget" class="budget">0 / 20 фото · 0 / 100 МБ</span>
@@ -53,6 +44,18 @@
       </label>
     </article>
   </main>
+  <details id="music-editor-menu" class="music-editor-dock" open>
+    <summary>Музыка ♫</summary>
+    <div class="editor-popover music-popover"><div data-music-editor data-resolver="{{ music_resolver }}">
+      <label>Ссылка на музыку<input name="music_url" type="url" maxlength="1500" placeholder="https://…" autocomplete="off"></label>
+      <label>Название<input name="music_title" maxlength="150" placeholder="Название композиции, альбома или плейлиста"></label>
+      <label>Исполнитель<input name="music_artist" maxlength="150" placeholder="Исполнитель"></label>
+      <input type="hidden" name="music_json" value="">
+      <button type="button" data-check-music>Проверить ссылку</button>
+      <p role="status" aria-live="polite"></p><div class="music-preview"></div>
+      <small>Apple Music, Bandcamp, VK (плейлист), Яндекс Музыка, Deezer, Spotify, SoundCloud, YouTube, Mixcloud.</small>
+    </div></div>
+  </details>
   <dialog id="export-done"><h2>Заявка готова</h2><p>Отправьте скачанный ZIP боту как файл. Он проверит фотографии и предложит подтвердить отправку.</p><p>Скачивание ещё не отправляет заявку.</p><button type="button" id="close-export">Понятно</button></dialog>
   <noscript>Для редактирования и экспорта включите JavaScript. Фотографии обрабатываются на вашем устройстве.</noscript>
 </body>

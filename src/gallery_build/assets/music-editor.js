@@ -2,6 +2,31 @@
 (() => {
   const root = document.querySelector('[data-music-editor]');
   if (!root) return;
+  const dock = root.closest('.music-editor-dock');
+  if (dock) {
+    const summary = dock.querySelector('summary'), panel = dock.querySelector('.music-popover');
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+    let expanded = dock.open, animation = null;
+    summary.addEventListener('click', event => {
+      event.preventDefault();
+      expanded = !expanded;
+      const from = dock.open ? {opacity:getComputedStyle(panel).opacity,transform:getComputedStyle(panel).transform} : {opacity:0,transform:'translateY(6px)'};
+      animation?.cancel();
+      dock.open = true;
+      panel.inert = !expanded;
+      if (!expanded && panel.contains(document.activeElement)) summary.focus();
+      if (reduced.matches) { dock.open = expanded; animation = null; return; }
+      const current = panel.animate([from, {opacity:expanded ? 1 : 0,transform:expanded ? 'translateY(0)' : 'translateY(6px)'}], {
+        duration:expanded ? 180 : 140, easing:'ease-out', fill:'both'
+      });
+      animation = current;
+      current.onfinish = () => {
+        if (animation !== current) return;
+        dock.open = expanded;
+        current.cancel(); animation = null;
+      };
+    });
+  }
   const url = root.querySelector('[name=music_url]'), title = root.querySelector('[name=music_title]'), artist = root.querySelector('[name=music_artist]');
   const stored = root.querySelector('[name=music_json]'), status = root.querySelector('[role=status]'), preview = root.querySelector('.music-preview');
   let music = null, player = null, generation = 0, timer, pending = Promise.resolve(), resolved = '', failure = '';
@@ -36,6 +61,7 @@
       preview.append(link);
       if (player.embed) {
         const frame = document.createElement('iframe'); frame.src = player.embed; frame.title = `Плеер ${player.name}`; frame.allow = 'autoplay; encrypted-media; fullscreen; picture-in-picture'; frame.referrerPolicy = 'strict-origin-when-cross-origin';
+        frame.dataset.provider = player.provider;
         preview.append(frame);
       }
       status.textContent = `${player.name}. ${player.embed ? 'Проверьте воспроизведение в плеере.' : 'Плеер сейчас недоступен, сохранится ссылка на сервис.'} Доступность и длина отрывка зависят от сервиса, региона и аккаунта. Автозапуска нет.`;

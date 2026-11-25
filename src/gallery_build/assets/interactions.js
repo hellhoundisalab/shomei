@@ -44,11 +44,16 @@
     if (!rail || rail.inert || event.ctrlKey || rail.scrollWidth <= rail.clientWidth) return;
     const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
     const unit = event.deltaMode === 1 ? 24 : event.deltaMode === 2 ? rail.clientWidth : 1;
+    if (!delta) return;
     event.preventDefault();
+    // Snap otherwise cancels small wheel steps by returning to the same card.
+    // Keep it disabled between wheel events; restore it only for touch scrolling.
+    rail.classList.add('wheel-scrolling');
     rail.scrollLeft += delta * unit;
   }, {passive:false});
   document.addEventListener('pointerdown', event => {
     const rail = event.target.closest('.rail');
+    if (rail && event.pointerType !== 'mouse') rail.classList.remove('wheel-scrolling');
     if (!rail || rail.inert || event.pointerType !== 'mouse' || event.button !== 0) return;
     drag = {rail, id:event.pointerId, x:event.clientX, scroll:rail.scrollLeft, moved:false};
   });
