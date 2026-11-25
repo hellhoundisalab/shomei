@@ -41,6 +41,7 @@ body.leaving-home .tablet{translate:0 0}
 .stack img:nth-child(n){transform:translate(calc(var(--photo-x,0px) + var(--hover-x,0px)),calc(var(--photo-y,0px) + var(--hover-y,0px))) rotate(calc(var(--photo-angle,0deg) + var(--hover-angle,0deg)));transition:transform 240ms cubic-bezier(.2,.8,.2,1),scale 260ms cubic-bezier(.2,.8,.2,1)}
 @media(hover:hover){.tablet:hover .stack img{scale:1.05}}.tablet:focus-visible .stack img{scale:1.05}
 .rail{cursor:grab;touch-action:pan-x pan-y}.rail.dragging{cursor:grabbing;scroll-snap-type:none;user-select:none}.rail img{user-select:none;-webkit-user-drag:none}
+.rail.wheel-scrolling{scroll-snap-type:none}
 .photo-open{display:block;cursor:zoom-in}
 #photo-viewer{position:fixed;inset:0;margin:0;max-width:none;max-height:none;width:100vw;height:100dvh;padding:0;border:0;background:#141619f5;color:#fff;overflow:hidden}#photo-viewer::backdrop{background:#141619}
 .viewer-toolbar{position:absolute;right:16px;top:12px;display:flex;gap:8px;z-index:2}.viewer-toolbar button{border:0;background:#ffffff18;color:#fff;border-radius:5px;min-width:44px;min-height:44px;padding:4px 12px;font:24px system-ui;cursor:pointer}.viewer-toolbar button:hover{background:#ffffff30}.viewer-toolbar output{font-size:14px}.viewer-toolbar button:focus-visible{outline:2px solid #fff}

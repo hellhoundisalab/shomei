@@ -6,6 +6,8 @@
 <link id="custom-style" rel="stylesheet" href="{{ prefix }}assets/{% if key == 'home' %}empty{% else %}custom-{{ key }}{% endif %}.css">
 <script src="{{ prefix }}assets/views.js" defer></script><script src="{{ prefix }}assets/gallery.js" defer></script>
 <script src="{{ prefix }}assets/interactions.js" defer></script>
+<link rel="stylesheet" href="{{ prefix }}assets/music.css">
+<script src="{{ prefix }}assets/music.js" defer></script>
 </head><body data-view="{{ key }}" style="background-color:{{ view.background }}">
 <main id="gallery" tabindex="-1">{{ content|safe }}</main>
 <dialog id="photo-viewer" aria-label="Просмотр фотографии">

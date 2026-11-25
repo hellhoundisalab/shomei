@@ -17,4 +17,5 @@
     </figure>
   {% endfor %}
   </div>
+{% if item.get("music") %}<div class="music-mount" data-music='{{ item.music|music|tojson }}'></div>{% endif %}
 </article>

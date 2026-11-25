@@ -15,7 +15,9 @@ class FormTests(unittest.TestCase):
     def test_form_is_static_separate_from_exhibition_previews_and_has_local_fonts(self):
         files = form_files()
         html = files["new/index.html"].decode()
-        self.assertIn("connect-src 'none'", html)
+        self.assertIn("connect-src https://admin.shomei.ru;", html)
+        self.assertIn("frame-src https://embed.music.apple.com", html)
+        self.assertNotIn("connect-src *", html)
         self.assertIn('id="files"', html)
         self.assertIn('id="export"', html)
         self.assertIn('id="background"', html)

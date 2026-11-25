@@ -3,10 +3,11 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="referrer" content="no-referrer">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' blob: data:; connect-src 'none'; worker-src 'self'; base-uri 'none'; form-action 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' blob: data:; connect-src {{ music_origin }}; frame-src https://embed.music.apple.com https://bandcamp.com https://vk.com https://music.yandex.ru https://widget.deezer.com https://open.spotify.com https://w.soundcloud.com https://www.youtube.com https://www.mixcloud.com https://player-widget.mixcloud.com; worker-src 'self'; base-uri 'none'; form-action 'none'">
   <title>Новая выставка — Shomei</title>
   <link rel="icon" href="data:,">
   <link rel="stylesheet" href="../assets/gallery.css"><link rel="stylesheet" href="../assets/form-fonts.css"><link rel="stylesheet" href="../assets/form.css">
+  <link rel="stylesheet" href="../assets/music.css"><script defer src="../assets/music-editor.js"></script>
   <script type="module" src="../assets/form.js"></script>
 </head>
 <body class="form-page">
@@ -43,6 +44,18 @@
       </label>
     </article>
   </main>
+  <details id="music-editor-menu" class="music-editor-dock" open>
+    <summary>Музыка ♫</summary>
+    <div class="editor-popover music-popover"><div data-music-editor data-resolver="{{ music_resolver }}">
+      <label>Ссылка на музыку<input name="music_url" type="url" maxlength="1500" placeholder="https://…" autocomplete="off"></label>
+      <label>Название<input name="music_title" maxlength="150" placeholder="Название композиции, альбома или плейлиста"></label>
+      <label>Исполнитель<input name="music_artist" maxlength="150" placeholder="Исполнитель"></label>
+      <input type="hidden" name="music_json" value="">
+      <button type="button" data-check-music>Проверить ссылку</button>
+      <p role="status" aria-live="polite"></p><div class="music-preview"></div>
+      <small>Apple Music, Bandcamp, VK (плейлист), Яндекс Музыка, Deezer, Spotify, SoundCloud, YouTube, Mixcloud.</small>
+    </div></div>
+  </details>
   <dialog id="export-done"><h2>Заявка готова</h2><p>Отправьте скачанный ZIP боту как файл. Он проверит фотографии и предложит подтвердить отправку.</p><p>Скачивание ещё не отправляет заявку.</p><button type="button" id="close-export">Понятно</button></dialog>
   <noscript>Для редактирования и экспорта включите JavaScript. Фотографии обрабатываются на вашем устройстве.</noscript>
 </body>

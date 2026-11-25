@@ -117,7 +117,9 @@ $('export').onclick = async () => {
   if (topic && Date.parse(topic.deadline) <= Date.now()) return message('Приём в эту выставку завершён. Выберите тему в боте заново.', true);
   busy = true; $('export').disabled = true; message('Собираю архив…');
   try {
+    const music = topic ? null : await window.shomeiMusic.read();
     const manifest = { schema_version: 1, kind: topic ? 'collective' : 'author', topic_id: topic?.id || null, title: $('title').value.trim(), description: $('description').value.trim(), author: $('author').value.trim(), theme: { background: $('background').value, accent: $('accent').value, font: $('font').value }, comment: $('comment').value.trim(), photos: photos.map((p, i) => ({ file: `images/${String(i + 1).padStart(2, '0')}.${p.ext}`, caption: p.caption.trim(), exif_visible: exifEnabled() ? [...p.visible].sort() : [] })) };
+    if (music) manifest.music = music;
     const blob = await packageZip(manifest, photos.map(p => p.file)), url = URL.createObjectURL(blob), link = document.createElement('a');
     link.href = url; link.download = 'shomei-application.zip'; link.click(); setTimeout(() => URL.revokeObjectURL(url), 60000);
     dirty = false; message('Архив скачан. Отправьте его боту файлом и подтвердите заявку.'); $('export-done').showModal();
