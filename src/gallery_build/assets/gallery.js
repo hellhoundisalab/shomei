@@ -143,6 +143,7 @@
       document.body.classList.remove('leaving', 'leaving-home');
       document.body.classList.add('entering');
       main.focus({preventScroll:true});
+      window.dispatchEvent(new Event("gallery:ready"));
     } finally {
       busy = false;
       if (pending !== null) { const key = pending; pending = null; navigate(key, false); }

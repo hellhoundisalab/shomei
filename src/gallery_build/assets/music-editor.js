@@ -1,0 +1,58 @@
+/* Shared author/review editor. Never execute pasted HTML or infer playback from load. */
+(() => {
+  const root = document.querySelector('[data-music-editor]');
+  if (!root) return;
+  const url = root.querySelector('[name=music_url]'), title = root.querySelector('[name=music_title]'), artist = root.querySelector('[name=music_artist]');
+  const stored = root.querySelector('[name=music_json]'), status = root.querySelector('[role=status]'), preview = root.querySelector('.music-preview');
+  let music = null, player = null, generation = 0, timer, pending = Promise.resolve(), resolved = '', failure = '';
+  let autoTitle = '', autoArtist = '';
+  try { music = JSON.parse(stored.value || 'null'); } catch { /* Invalid initial data is rechecked. */ }
+  if (music) { url.value = music.url; title.value = music.title || ''; artist.value = music.artist || ''; }
+  function save() { stored.value = JSON.stringify(music ? {...music, title:title.value.trim(), artist:artist.value.trim()} : null); }
+  async function check() {
+    const version = ++generation, value = url.value.trim();
+    preview.replaceChildren(); music = null; player = null; resolved = ''; failure = ''; save();
+    if (!value) { status.textContent = ''; return; }
+    status.textContent = 'Распознаём ссылку…';
+    const controller = new AbortController(), timeout = setTimeout(() => controller.abort(), 12000);
+    try {
+      const endpoint = new URL(root.dataset.resolver || 'https://admin.shomei.ru/music/resolve');
+      endpoint.searchParams.set('url', value);
+      const response = await fetch(endpoint, {credentials:'omit', signal:controller.signal});
+      const data = await response.json();
+      if (version !== generation) return;
+      if (!response.ok || !data.player) throw new Error(data.error || 'Не удалось распознать ссылку');
+      music = data.music; player = data.player; resolved = value;
+      if (!title.value || title.value === autoTitle) title.value = autoTitle = music.title || '';
+      if (!artist.value || artist.value === autoArtist) artist.value = autoArtist = music.artist || '';
+      save();
+      const link = document.createElement('a'); link.href = player.url; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.textContent = `Открыть в ${player.name} ↗`;
+      preview.append(link);
+      if (player.embed) {
+        const frame = document.createElement('iframe'); frame.src = player.embed; frame.title = `Плеер ${player.name}`; frame.allow = 'autoplay; encrypted-media; fullscreen; picture-in-picture'; frame.referrerPolicy = 'strict-origin-when-cross-origin';
+        preview.append(frame);
+      }
+      status.textContent = `${player.name}. ${player.embed ? 'Проверьте воспроизведение в плеере.' : 'Плеер сейчас недоступен, сохранится ссылка на сервис.'} Доступность и длина отрывка зависят от сервиса, региона и аккаунта. Автозапуска нет.`;
+    } catch (error) {
+      if (version !== generation) return;
+      failure = error.name === 'AbortError' ? 'Сервис не ответил. Повторите проверку или уберите ссылку.' : (error.message || 'Не удалось проверить музыку');
+      status.textContent = failure;
+    } finally { clearTimeout(timeout); }
+  }
+  function start() { clearTimeout(timer); pending = check(); return pending; }
+  url.addEventListener('input', () => { ++generation; resolved = ''; clearTimeout(timer); timer = setTimeout(start, 600); });
+  title.addEventListener('input', save); artist.addEventListener('input', save);
+  root.querySelector('[data-check-music]').onclick = start;
+  const read = async () => {
+    if (url.value.trim() !== resolved) await start(); else await pending;
+    if (failure) throw new Error(failure);
+    save(); return JSON.parse(stored.value || 'null');
+  };
+  window.shomeiMusic = {read};
+  root.closest('form')?.addEventListener('submit', async event => {
+    if (!url.value.trim() || url.value.trim() === resolved) { save(); return; }
+    event.preventDefault();
+    try { await read(); root.closest('form').requestSubmit(); } catch { url.focus(); }
+  });
+  if (url.value) start();
+})();

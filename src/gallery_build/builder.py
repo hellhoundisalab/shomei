@@ -10,6 +10,8 @@ from urllib.parse import urlsplit
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined, select_autoescape
 
+from .music import music
+
 from .catalog import catalog_from_items, catalog_ids, check_catalog_item, upsert_catalog
 
 ROOT = Path(__file__).parent
@@ -69,6 +71,7 @@ def scatter(key, index):
 
 
 ENV.globals["scatter"] = scatter
+ENV.filters["music"] = music
 ENV.filters["dark"] = is_dark
 ENV.filters["ink"] = lambda color: "#f5f4f0" if is_dark(color) else "#15425d"
 
@@ -128,8 +131,9 @@ def validate_manifest(item):
         "theme",
         "photos",
     }
-    if not isinstance(item, dict) or set(item) != fields or item["schema_version"] != 1:
+    if not isinstance(item, dict) or set(item) - {"music"} != fields or item["schema_version"] != 1:
         raise ValueError("Manifest v1: missing or unknown fields")
+    music(item.get("music"))
     identifier(item["id"])
     if item["kind"] not in {"author", "collective"}:
         raise ValueError("Invalid exhibition kind")

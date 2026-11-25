@@ -31,3 +31,5 @@
 .editor-toolbar:has(#upload-warning:not([hidden])) .budget{color:#9f3025;opacity:1}
 
 @media(max-width:360px){.editor-toolbar .font-control select{width:80px;max-width:80px}.global-exif-control .exif-verb{display:none}}
+
+.music-popover{width:min(480px,calc(100vw - 32px));max-height:75dvh;overflow:auto}.form-page[data-kind="collective"] #music-editor-menu{display:none}
