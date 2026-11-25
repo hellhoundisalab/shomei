@@ -7,6 +7,7 @@
   let music = null, player = null, generation = 0, timer, pending = Promise.resolve(), resolved = '', failure = '';
   let autoTitle = '', autoArtist = '';
   try { music = JSON.parse(stored.value || 'null'); } catch { /* Invalid initial data is rechecked. */ }
+  const initialMusic = music;
   if (music) { url.value = music.url; title.value = music.title || ''; artist.value = music.artist || ''; }
   function save() { stored.value = JSON.stringify(music ? {...music, title:title.value.trim(), artist:artist.value.trim()} : null); }
   async function check() {
@@ -23,6 +24,11 @@
       if (version !== generation) return;
       if (!response.ok || !data.player) throw new Error(data.error || 'Не удалось распознать ссылку');
       music = data.music; player = data.player; resolved = value;
+      // An outage must not erase a previously resolved player while editing text.
+      if (player.provider === 'bandcamp' && !music.bandcamp_id && initialMusic?.url === music.url && /^[1-9][0-9]{0,14}$/.test(initialMusic.bandcamp_id || '')) {
+        music.bandcamp_id = initialMusic.bandcamp_id;
+        player.embed = `https://bandcamp.com/EmbeddedPlayer/${player.kind}=${music.bandcamp_id}/size=large/bgcol=ffffff/linkcol=315d4e/artwork=small/transparent=true/`;
+      }
       if (!title.value || title.value === autoTitle) title.value = autoTitle = music.title || '';
       if (!artist.value || artist.value === autoArtist) artist.value = autoArtist = music.artist || '';
       save();
